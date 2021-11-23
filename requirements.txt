@@ -28,3 +28,5 @@
 #memoized-property
 #termcolor
 
+# interface
+streamlit
