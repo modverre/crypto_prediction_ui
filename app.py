@@ -1,40 +1,58 @@
-
 import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+from pytrends.request import TrendReq
 
-import datetime
+pytrend = TrendReq()
 
-import requests
+#Page title
+st.set_page_config(page_title="Crypto Predicto",
+       page_icon="🤑",
+       layout="wide",
+    )
+#Header
+st.header("🤑CRYPTO PREDICTO🤑")
 
-'''
-# TaxiFareModel front
+#Coin selection bar
+clist = ['Dogecoin', 'Dogelon Mars', 'Samoyedcoin', 'Hoge Finance','Shiba Inu' ]
+currency = st.selectbox("Select a coin:", clist)
 
-This front queries the Le Wagon [taxi fare model API](https://taxifare.lewagon.ai/predict?pickup_datetime=2012-10-06%2012:10:20&pickup_longitude=40.7614327&pickup_latitude=-73.9798156&dropoff_longitude=40.6513111&dropoff_latitude=-73.8803331&passenger_count=2)
-'''
+#Sidebar
+add_selectbox = st.sidebar.title(currency)
+image = st.sidebar.image("/Users/nat.walentynowicz/Downloads/image.png", width=250)
+marketcap = st.sidebar.markdown("**Market Capitalization:**")
+age = st.sidebar.markdown("**How old is the coin:**")
+overall_sen = st.sidebar.markdown("**Overall Sentiment:**")
 
-pickup_date = st.date_input('pickup datetime', value=datetime.datetime(2012, 10, 6, 12, 10, 20))
-pickup_time = st.time_input('pickup datetime', value=datetime.datetime(2012, 10, 6, 12, 10, 20))
-pickup_datetime = f'{pickup_date} {pickup_time}'
-pickup_longitude = st.number_input('pickup longitude', value=40.7614327)
-pickup_latitude = st.number_input('pickup latitude', value=-73.9798156)
-dropoff_longitude = st.number_input('dropoff longitude', value=40.6413111)
-dropoff_latitude = st.number_input('dropoff latitude', value=-73.7803331)
-passenger_count = st.number_input('passenger_count', min_value=1, max_value=8, step=1, value=1)
+#Colums
+col1, col2 = st.columns(2)
 
-# enter here the address of your flask api
-url = 'https://taxifare.lewagon.ai/predict'
+#Colum1
+prediction_index = col1.metric(label="Increase in the next 24h", value="+4.87%", delta="$46,583.91",)
 
-params = dict(
-    pickup_datetime=pickup_datetime,
-    pickup_longitude=pickup_longitude,
-    pickup_latitude=pickup_latitude,
-    dropoff_longitude=dropoff_longitude,
-    dropoff_latitude=dropoff_latitude,
-    passenger_count=passenger_count)
+#Colum2 - Price data
+col2.subheader("Price data")
+def get_line_chart_data():
 
-response = requests.get(url, params=params)
+    return pd.DataFrame(
+            np.random.randn(20, 1),
+            columns=[currency]
+        )
 
-prediction = response.json()
+df = get_line_chart_data()
 
-pred = prediction['prediction']
+col2.line_chart(df)
 
-pred
+#Colum2 - Google Trends
+col2.subheader("Google Trends")
+pytrend.build_payload(kw_list=[currency])
+
+# Interest by Region
+df = pytrend.interest_over_time()
+
+fig = px.line(df.reset_index(), x='date', y=currency)  #px.line(df[df['country'] == currency], x = "year", y = "gdpPercap",title = "GDP per Capita")
+col2.plotly_chart(fig, use_container_width=True)
+
+#col2.subheader("A narrow column with the data")
+#col2.table(df.sort_values(by=currency, ascending=False))
