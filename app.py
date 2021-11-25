@@ -95,7 +95,7 @@ col2.line_chart(df.rename(columns={"Dates":"index"}).set_index("index"))
 st.subheader("Google Trends")
 pytrend.build_payload(kw_list=[currency])
 
-# Interest by Region
+# Interest over time
 df = pytrend.interest_over_time()
 
 fig = px.line(df.reset_index(), x='date', y=currency)  #px.line(df[df['country'] == currency], x = "year", y = "gdpPercap",title = "GDP per Capita")
