@@ -8,9 +8,30 @@ from plotly import graph_objs as go
 import plotly.express as px
 from pycoingecko import CoinGeckoAPI
 from datetime import datetime, timedelta
+import requests
 
 pytrend = TrendReq()
 cg = CoinGeckoAPI()
+
+#Predicted Price in the next 24h
+
+GCP_url = 'https://cryptov1-x3jub72uhq-ew.a.run.app/predict?coin_name=doge'
+
+current_price_url_1 = 'https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=eur'
+current_price_url_2 = 'https://api.coingecko.com/api/v3/simple/price?ids=samoyedcoin&vs_currencies=eur'
+
+prediction_1 = requests.get(GCP_url).json()["prediction"]
+#prediction_1 = 0.1998
+prediction_2 = 0.06913
+
+today_price_1 = requests.get(current_price_url_1).json()["dogecoin"]["eur"]
+today_price_2 = requests.get(current_price_url_2).json()["samoyedcoin"]["eur"]
+
+percent_diff_value_1 = round(((prediction_1 - today_price_1)/today_price_1) * 100, 2)
+percent_diff_value_2 = round(((prediction_2 - today_price_2)/today_price_2) * 100, 2)
+
+percent_diff_1 = f'{percent_diff_value_1}%'
+percent_diff_2 = f'{percent_diff_value_2}%'
 
 # #Load current price data for
 # def load_curr_price_data(coin_names, vs_curr='eur'):
@@ -30,6 +51,7 @@ cg = CoinGeckoAPI()
 #         res[coin]=price
 #     return res
 
+#Price chart - Plotly
 
 def generate_price_line_chart(x,y,split_index,coin_name='COINNAME'):
     """This function generates a plotly line chart (plotly.go).
@@ -50,7 +72,7 @@ def generate_price_line_chart(x,y,split_index,coin_name='COINNAME'):
     fig.add_trace(go.Scatter(x=x[split_index:], y=y[split_index:], name='Predicted',
                             line=dict(color='orange', width=2)))
 
-    fig.update_layout(title=f'{coin_name}',xaxis_title='Datetime',yaxis_title='Price (vs EUR)')
+    fig.update_layout(xaxis_title='Datetime',yaxis_title='Price (vs EUR)')
     return fig
 
 def data_make_df(raw):
@@ -65,17 +87,20 @@ def data_make_df(raw):
 
     return df
 
+
+#Get data from CoinGecko
 def temp_get_data(coin_name):
     gecko_raw = cg.get_coin_market_chart_range_by_id(id=coin_name,
                                             vs_currency='eur',
-                                            from_timestamp='1637686488',
-                                            to_timestamp='1637872888'
+                                            from_timestamp='1629965208',
+                                            to_timestamp='1637913973'
                                             )
 
     x = [str(x) for x in data_make_df(gecko_raw).reset_index().datetime.values]
     y = data_make_df(gecko_raw).reset_index().price.values
-    return x,y,24
+    return x,y,len(x)-1
 
+#Get data from API
 ########################################################
 def get_data(coin_name):
     # Take a look a this function. THAT'S HOW MY DATA COULD LOOK LIKE
@@ -94,7 +119,6 @@ def get_data(coin_name):
     return x,y,obj['split_idx']
 ########################################################
 
-
 #Page title
 st.set_page_config(page_title="Crypto Predicto",
        page_icon="🤑",
@@ -108,7 +132,7 @@ st.write("""
 """)
 
 #Coin selection bar
-clist = ['Dogecoin', 'Dogelon Mars', 'Samoyedcoin', 'Hoge Finance','Shiba Inu' ]
+clist = ['Dogecoin','Samoyedcoin', 'Dogelon Mars', 'Hoge Finance','Shiba Inu' ]
 currency = st.selectbox("Select a coin:", clist)
 
 #price_data = load_curr_price_data('DOGECOIN,bitcoin')
@@ -121,11 +145,21 @@ samoyedcoin_x,samoyedcoin_y,samoyedcoin_split_index = temp_get_data('samoyedcoin
 #Colums division
 col1, col2 = st.columns(2)
 
-col1.subheader("Price for doge")
+col1.markdown("""---""")
+col1.subheader(clist[0])
+col1.metric("Predicted Price in the next 24h", prediction_1, percent_diff_1)
+col1.markdown("""---""")
+col2.markdown("""---""")
+col2.subheader(clist[1])
+col2.metric("Predicted Price in the next 24h", prediction_2, percent_diff_2)
+col2.markdown("""---""")
+
+#Price hist & pred charts in two colums
+col1.subheader("Prices from the last 3 months + Predicted Price")
 fig = generate_price_line_chart(doge_x,doge_y,doge_split_index,'Doge')
 col1.plotly_chart(fig, use_container_width=True)
 
-col2.subheader("Price for samoyedcoin")
+col2.subheader("Prices from the last 3 months  + Predicted Price")
 fig = generate_price_line_chart(samoyedcoin_x,samoyedcoin_y,samoyedcoin_split_index,'Samoyedcoin')
 col2.plotly_chart(fig, use_container_width=True)
 
