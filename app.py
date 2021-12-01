@@ -1,107 +1,99 @@
+import requests
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
-from pytrends.request import TrendReq
-from pycoingecko import CoinGeckoAPI
+from datetime import date
 from datetime import datetime, timedelta
 
+#Coins list
+clist = ['doge','samo','cummies','dinu','doggy','elon',
+         'ftm','grlc','hoge','lowb','shib',
+         'shibx','smi','wow','yooshi','yummy']
 
-pytrend = TrendReq()
-cg = CoinGeckoAPI()
+#price_data = load_curr_price_data('DOGECOIN,bitcoin')
 
-#Page title
+#Page configuration
 st.set_page_config(page_title="Crypto Predicto",
-       page_icon="🤑",
-       layout="wide",
-    )
-#Header
-st.header("🤑CRYPTO PREDICTO🤑")
+                   page_icon="🦈",
+                   layout="wide",
+                   )
 
-st.write("""
-**Memes Crypto Price Prediction Based on Search and Social Data**
+#Header
+
+col1, col2= st.columns([1,3])
+
+col1.image("/Users/nat.walentynowicz/code/valentine-stack/modverre/crypto_prediction_ui/crypto_logo.png", width=200)
+
+col2.markdown("""
+### Memes Crypto Price Prediction Based on Search and Social Data
 """)
 
-#Load Data
-doge_current = cg.get_price(ids='dogecoin', vs_currencies='usd')['dogecoin']['usd']
-today = datetime.utcnow().date()
-#doge_market_cap = cg.get_coin_market_chart_by_id(id='dogecoin', vs_currency='usd', days=1, interval="daily")
-doge_market_cap_current = cg.get_coin_market_chart_by_id(id='dogecoin', vs_currency='eur', days=1, interval="daily")
-date_market_cap = doge_market_cap_current['market_caps'][0][0]
+col2.selectbox("Select a coin:", clist)
+
+#Historial prices from our API
+url_hist = 'https://cryptov1-x3jub72uhq-ew.a.run.app/get/coin_history?tickerlist=doge,samo&hoursback=3'
+
+response = requests.get(url_hist).json()
+df_dict = {}
+for coin in response:
+    df = pd.DataFrame.from_dict(response[coin])
+    df_dict[coin] = df
+
+current_price_per_coin={coin:float(df_dict[coin][df_dict[coin]["timestamp"] == df_dict[coin].max()["timestamp"]]["price"]) for coin in df_dict}
 
 
-#Coin selection bar
-clist = ['Dogecoin', 'Dogelon Mars', 'Samoyedcoin', 'Hoge Finance','Shiba Inu' ]
-currency = st.selectbox("Select a coin:", clist)
+#Predicted prices
+list_of_dfs = ['doge','samo','cummies','dinu','doggy','elon',
+         'ftm','grlc','hoge','lowb','shib',
+         'shibx','smi','wow','yooshi','yummy']
 
-#Sidebar
-add_selectbox = st.sidebar.title(currency)
-image = st.sidebar.image("/Users/nat.walentynowicz/Downloads/image.png", width=250)
-market_cap_string = "${}".format(date_market_cap)
-marketcap = st.sidebar.metric(label="Market Capitization", value=market_cap_string)
-age = st.sidebar.markdown("**How old is the coin:**")
-overall_sen = st.sidebar.markdown("**Overall Sentiment:**")
+predictions= {}
 
+for i in list_of_dfs:
+    preds = []
+    for x in range (24):
+        preds.append(np.random.uniform())
+    predictions[i] = preds
 
-#Colums division
-col1, col2 = st.columns(2)
+#Line chart
+def get_line_chart_data(coin_name):
 
-#Price & Prediction
-col1.write('''# Results''')
-coin_price_string = "${}".format(doge_current)
-prediction_index = col1.metric(label="% change in the next 24h", value="XX.XX%")
-price_index = col1.metric(label="Current Price", value=coin_price_string)
+    return pd.DataFrame(predictions[coin_name],columns=['Predicted price'])
 
 
-# Custom function for rounding values
-#def round_value(input_value):
-    #if input_value.values > 1:
-        #a = float(round(input_value, 2))
-    #else:
-        #a = float(round(input_value, 8))
-    #return a
+# for coin in response:
+#     df = pd.DataFrame.from_dict(response[coin])
+#     df_list.append(df)
+
+# df_list
 
 
-#Reformat Historical Date for next function
-today = datetime.utcnow().date()
-previous_day = today - timedelta(days=1)
-HIST_DATE = col2.date_input("Date: ", value=previous_day, min_value=datetime(2014,1,1), max_value=previous_day)
-ORG_USD = col2.number_input("USD Amount: ", min_value=1, max_value=999999999)
-HIST_DATE_REFORMAT = HIST_DATE.strftime("%d-%m-%Y")
-HIST_DATE_datetime = datetime.strptime(HIST_DATE_REFORMAT,"%d-%m-%Y")
-doge_historic = cg.get_coin_history_by_id(id='dogecoin', vs_currencies='usd', date=HIST_DATE_REFORMAT)['market_data']['current_price']['usd']
+#Ranking
+st.markdown("""---""")
+layout = [1,1, 1, 2]
+col0, col1, col2, col3 = st.columns(layout)
 
-doge_historic = round(doge_historic, 5)
-
-
-#Colum2 - Price data
-col2.subheader("Price data")
-now = datetime.now()
-historical_prices = cg.get_coin_market_chart_range_by_id(id='dogecoin', vs_currency="usd", from_timestamp=HIST_DATE_datetime.timestamp(), to_timestamp=now.timestamp())['prices']
+#Current Price
+col1.subheader("*Current Price*")
+#Predicted Price & % change
+col2.subheader("*Predicted Price*")
+#Predicted Price for next 24h
+col3.subheader("*Predicted Price next 24h*")
+st.markdown("""---""")
 
 
-dates = []
-prices = []
+#Filling the columns
+for i,v in enumerate(clist):
+    i=1+i
+    cols = st.columns(layout)
+    cols[0].markdown(f'## {v}')
+    cols[1].markdown(f'## €{round(current_price_per_coin[v],8)}')
+    percent_diff_value = round(((predictions[v][23] - current_price_per_coin[v])/current_price_per_coin[v]) * 100)
+    cols[2].metric(" ",f'€{round(predictions[v][23],8)}', f'{percent_diff_value}%')
+    cols[3].line_chart(get_line_chart_data(v),width=60, height=50)
+    st.markdown("""---""")
 
-for x,y in historical_prices:
-  dates.append(x)
-  prices.append(y)
-
-dictionary = {"Prices":prices, "Dates":dates}
-df = pd.DataFrame(dictionary)
-df['Dates'] = pd.to_datetime(df['Dates'],unit='ms',origin='unix')
-
-col2.line_chart(df.rename(columns={"Dates":"index"}).set_index("index"))
-
-#Google Trends
-st.subheader("Google Trends")
-pytrend.build_payload(kw_list=[currency])
-
-# Interest over time
-df = pytrend.interest_over_time()
-
-fig = px.line(df.reset_index(), x='date', y=currency)  #px.line(df[df['country'] == currency], x = "year", y = "gdpPercap",title = "GDP per Capita")
-st.plotly_chart(fig, use_container_width=True)
-
-#col2.subheader("A narrow column with the data")
-#col2.table(df.sort_values(by=currency, ascending=False))
+list_of_dfs = ["ban", "cummies", "dinu", "doge",
+"doggy", "elon", "erc20", "ftm", "grlc", "hoge",
+"lowb", "mona", "samo", "shib", "shibx", "smi",
+"wow", "yooshi","yummy"]
