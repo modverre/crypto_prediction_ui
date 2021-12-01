@@ -55,9 +55,6 @@ for i in list_of_dfs:
         preds.append(np.random.uniform())
     predictions[i] = preds
 
-    predictions
-
-
 #Line chart
 def get_line_chart_data(coin_name):
 
@@ -93,7 +90,7 @@ for i,v in enumerate(clist):
     cols[1].markdown(f'## €{round(current_price_per_coin[v],8)}')
     percent_diff_value = round(((predictions[v][23] - current_price_per_coin[v])/current_price_per_coin[v]) * 100)
     cols[2].metric(" ",f'€{round(predictions[v][23],8)}', f'{percent_diff_value}%')
-    cols[3].line_chart(get_line_chart_data(v))
+    cols[3].line_chart(get_line_chart_data(v),width=60, height=50)
     st.markdown("""---""")
 
 list_of_dfs = ["ban", "cummies", "dinu", "doge",
