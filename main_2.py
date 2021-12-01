@@ -3,69 +3,18 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import date
-from pytrends.request import TrendReq
-from plotly import graph_objs as go
-import plotly.express as px
-from pycoingecko import CoinGeckoAPI
 from datetime import datetime, timedelta
-import yfinance as yf
+import requests
 
-pytrend = TrendReq()
-cg = CoinGeckoAPI()
+#Coins list
+clist = ["doge", "shib", "elon", "samo", "hoge",
+         "mona", "dogedash", "erc20", "ban", "cummies",
+         "doggy",  "smi", "doe", "pepecash","wow",
+         "dinu", "yummy", "shibx", "lowb", "grlc"]
 
-# #Load current price data for
-# def load_curr_price_data(coin_names, vs_curr='eur'):
-#     """This fucntion returns dict with coin names as keys and prices in vs_curr as a values
-#     Args:
-#         coin_name str: comma separated list of coin names i.e "bitcoin,etereum,dogecoing"
-#         vs_curr (str, optional): [description]. Defaults to 'eur'.
-#     Returns:
-#         prices (dict): List of coin prices
-#     """
-#     res = {}
-#     list_of_coins = [x.lower() for x in coin_names.split(',') if x ]
-#     tmp = cg.get_price(ids=list_of_coins, vs_currencies=vs_curr)
+#price_data = load_curr_price_data('DOGECOIN,bitcoin')
 
-#     for coin in list_of_coins:
-#         price = tmp[coin]['eur']
-#         res[coin]=price
-#     return res
-
-#Price chart - Plotly
-def generate_price_line_chart(x, y, split_index, coin_name='COINNAME', **kwargs):
-    """This function generates a plotly line chart (plotly.go).
-
-
-    Args:
-        x ([list]): [description]
-        y ([list]): [description]
-        split_index ([type]): where the predicted data starts
-        coin_name (str, optional): [description]. Defaults to 'COINNAME'.
-
-    Returns:
-        figure
-    """
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x[0:split_index+1], y=y[0:split_index+1], name='Historical',
-                             line=dict(width=2.5)))
-    fig.add_trace(go.Scatter(x=x[split_index:], y=y[split_index:], name='Predicted',
-                             line=dict(color='#e3cd27',width=2.5)))
-    fig.update_xaxes(showgrid=False, gridwidth=0.1, gridcolor='darkgrey')
-    fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='darkgrey')
-    fig.update_layout(#title=f'{coin_name}',
-                         #width=600,
-                         height=200,
-                      showlegend=False,
-                        plot_bgcolor='rgba(0,0,0,0)',
-                      margin=dict(t=10, l=10, b=10, r=10),
-                      #xaxis_title='Datetime',
-
-                      yaxis_title='Price (vs EUR)', **kwargs)
-                      # remove facet/subplot labels
-    fig.update_layout(annotations=[], overwrite=True)
-    return fig
-
-
+#Test data for front-end
 def data_make_df(raw):
     df = pd.DataFrame(raw['prices'], columns=['timestamp', 'price'])
     df2 = pd.DataFrame(raw['market_caps'], columns=['ts', 'market_caps'])
@@ -77,38 +26,6 @@ def data_make_df(raw):
     df = df.set_index('datetime')
 
     return df
-
-
-def temp_get_data(coin_name):
-    gecko_raw = cg.get_coin_market_chart_range_by_id(id=coin_name,
-                                                     vs_currency='eur',
-                                                     from_timestamp='1637686488',
-                                                     to_timestamp='1637872888'
-                                                     )
-
-    x = [str(x) for x in data_make_df(gecko_raw).reset_index().datetime.values]
-    y = data_make_df(gecko_raw).reset_index().price.values
-    return x, y, len(x)-1
-
-########################################################
-
-def get_data(coin_name):
-    # Take a look a this function. THATS HOW THE DATA COULD LOOK LIKE
-    # {
-    #   'name': 'coin_name',
-    #   'data': {
-    #            x:[], Dates
-    #            y:[]  Prices/Values
-    #           },
-    #   'split_index':10 ## Index at which the predicted data starts
-    # }
-    obj = requests.get('URL TO API /{coin_name}').json()['data']
-    print(f"Fetched data for {obj['name']}")
-    ## Evenauly filter
-    x = obj["data"]["x"]
-    y = obj["data"]["y"]
-    return x, y, obj['split_idx']
-########################################################
 
 
 #Page title
@@ -126,57 +43,75 @@ col1.write("""
 Memes Crypto Price Prediction Based on Search and Social Data
 """)
 
-#Coin selection bar
-clist = ['Dogecoin', 'Samoyedcoin'
-         #'Samoyedcoin', 'Hoge Finance', 'Shiba Inu'
-        ]
-currency = col2.selectbox("Select a coin:", clist)
+#Line chart
+def get_line_chart_data():
 
-#price_data = load_curr_price_data('DOGECOIN,bitcoin')
+    return pd.DataFrame(
+            np.random.randn(20, 1),
+            columns=['Price hourly']
+        )
 
-doge_x, doge_y, doge_split_index = temp_get_data('dogecoin')
-samoyedcoin_x, samoyedcoin_y, samoyedcoin_split_index = temp_get_data(
-    'samoyedcoin')
+df = get_line_chart_data()
 
-
-#Colums division
-#col1, col2 = st.columns()
-# col0, col1, col2, col3 = st.columns([1,1, 1, 3])
-
-# col1.subheader("Market Cap")
-# col1.metric(label="% doge", value="XX.XX%")
-# col0.markdown('# Doge')
-# col0.markdown('# Samoyedcoin')
-# col2.subheader("Change %")
-# col2.metric(label="% doge", value="XX.XX%")
-# col3.subheader("Price over time")
-# fig = generate_price_line_chart(doge_x, doge_y, doge_split_index, 'Doge')
-# col3.plotly_chart(fig, use_container_width=True)
-
-# col1.metric(label="% Samoyedcoin", value="XX.XX%")
-# col2.metric(label="% Samoyedcoin", value="XX.XX%")
-
-# fig = generate_price_line_chart(samoyedcoin_x, samoyedcoin_y, samoyedcoin_split_index, 'Samoyedcoin')
-# col3.plotly_chart(fig, use_container_width=True)
-
+#Ranking
+st.markdown("""---""")
 layout = [1,1, 1, 2]
-st.title("Ranking!")
 col0, col1, col2, col3 = st.columns(layout)
-col1.subheader("Current Price")
-col2.subheader("Predicted Price")
-col3.subheader("Price over time")
+
+#Current Price
+col1.subheader("*Current Price*")
+#Predicted Price & % change
+col2.subheader("*Predicted Price*")
+#Predicted Price for next 24h
+col3.subheader("*Predicted Price next 24h*")
+st.markdown("""---""")
+
+#Filling the columns
 for i,v in enumerate(clist):
     i=1+i
     cols = st.columns(layout)
     cols[0].markdown(f'## {v}')
     cols[1].markdown(f'## ${29*i*2},084,858')
-    cols[2].metric(value=f'{(i+2) * 2 * 2} % ',label='Increase')
-    if i == 0:
-        fig = generate_price_line_chart(doge_x, doge_y, doge_split_index, 'Doge')
-    elif i ==1:
-        fig = generate_price_line_chart(samoyedcoin_x, samoyedcoin_y, samoyedcoin_split_index, 'Samoyedcoin')
-    cols[3].plotly_chart(fig, use_container_width=True)
+    cols[2].metric(v,"$121.10", "0.46%")
+    cols[3].line_chart(df)
+    st.markdown("""---""")
 
-#Price & Prediction Metrics
-#st.write('''# Prediction''')
-#prediction_index = st.metric(label="% change in the next 24h", value="XX.XX%")
+
+#Historial prices from our API
+url_hist = 'https://cryptov1-x3jub72uhq-ew.a.run.app/get/coin_history?tickerlist=doge,samo&hoursback=3'
+
+response = requests.get(url_hist).json()
+df_dict = {}
+for coin in response:
+    df = pd.DataFrame.from_dict(response[coin])
+    df_dict[coin] = df
+
+current_price_per_coin={coin:float(df_dict[coin][df_dict[coin]["timestamp"] == df_dict[coin].max()["timestamp"]]["price"]) for coin in df_dict}
+
+# for coin in response:
+#     df = pd.DataFrame.from_dict(response[coin])
+#     df_list.append(df)
+
+# df_list
+
+# #Prediciton prices from our API
+# import requests
+# import pandas as pd
+
+# GCP_url = 'https://cryptov1-x3jub72uhq-ew.a.run.app/predict?coin_name=doge'
+
+# current_price_url_1 = 'https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=eur'
+# current_price_url_2 = 'https://api.coingecko.com/api/v3/simple/price?ids=samoyedcoin&vs_currencies=eur'
+
+# prediction_1 = requests.get(GCP_url).json()["prediction"]
+# #prediction_1 = 0.1998
+# prediction_2 = 0.06913
+
+# today_price_1 = requests.get(current_price_url_1).json()["dogecoin"]["eur"]
+# today_price_2 = requests.get(current_price_url_2).json()["samoyedcoin"]["eur"]
+
+# percent_diff_value_1 = round(((prediction_1 - today_price_1)/today_price_1) * 100, 2)
+# percent_diff_value_2 = round(((prediction_2 - today_price_2)/today_price_2) * 100, 2)
+
+# percent_diff_1 = f'{percent_diff_value_1}%'
+# percent_diff_2 = f'{percent_diff_value_2}%'
