@@ -22,7 +22,7 @@ st.set_page_config(page_title="Crypto Predicto",
 
 col1, col2= st.columns([1,3])
 
-col1.image("/Users/nat.walentynowicz/code/valentine-stack/modverre/crypto_prediction_ui/crypto_logo.png", width=200)
+col1.image("https://xdisplays.net/priv/crypto_logo.png", width=200)
 
 col2.markdown("""
 ### Memes Crypto Price Prediction Based on Search and Social Data
