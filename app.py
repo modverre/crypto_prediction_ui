@@ -73,10 +73,12 @@ doge_historic = cg.get_coin_history_by_id(id='dogecoin', vs_currencies='usd', da
 
 doge_historic = round(doge_historic, 5)
 
+
 #Colum2 - Price data
 col2.subheader("Price data")
 now = datetime.now()
 historical_prices = cg.get_coin_market_chart_range_by_id(id='dogecoin', vs_currency="usd", from_timestamp=HIST_DATE_datetime.timestamp(), to_timestamp=now.timestamp())['prices']
+
 
 dates = []
 prices = []
