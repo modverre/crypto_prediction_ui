@@ -55,6 +55,8 @@ for i in list_of_dfs:
         preds.append(np.random.uniform())
     predictions[i] = preds
 
+    predictions
+
 
 #Line chart
 def get_line_chart_data(coin_name):
