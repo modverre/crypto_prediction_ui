@@ -66,7 +66,7 @@ for ticker in tickerlist:
     df.index = pd.date_range(start_dt, periods=df.shape[0],freq="H") # hourly data from beginning to end
     dfs_full[ticker] = df
 
-#Line chart
+#Line chart (old)
 def get_line_chart_data(coin_name):
     return pd.DataFrame(predictions[coin_name],columns=['Predicted price'])
 
