@@ -51,7 +51,7 @@ def get_predictions(testdata=True):
         predictions = requests.get(url_predict).json()  # its NOT a dataframe but a dict of lists, so the call only is fine!
     return predictions
 
-predictions = get_predictions(testdata=True)
+predictions = get_predictions(testdata=False)
 
 # put the name and the percentage in a dict
 ranking = {}
