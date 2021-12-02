@@ -9,7 +9,7 @@ import plotly.express as px
 import plotly.io as pio
 pio.templates.default = "plotly_white"  # change plotly default, white looks better
 
-# too bad it didnt work
+# the waves
 # https://codepen.io/andyfitz/pen/akAKdV
 
 # Coins list
