@@ -9,6 +9,9 @@ import plotly.express as px
 import plotly.io as pio
 pio.templates.default = "plotly_white"  # change plotly default, white looks better
 
+# too bad it didnt work
+# https://codepen.io/andyfitz/pen/akAKdV
+
 # Coins list
 tickerlist = ["ban", "cummies", "dinu", "doge",
 "doggy", "elon", "erc20", "ftm", "grlc", "hoge",
@@ -17,7 +20,7 @@ tickerlist = ["ban", "cummies", "dinu", "doge",
 
 np.set_printoptions(suppress=True)
 
-hoursback = 24
+hoursback = 48
 
 # reduce the len of the list just for testing
 #tickerlist = ['doge', 'samo']
@@ -48,7 +51,7 @@ def get_predictions(testdata=True):
         predictions = requests.get(url_predict).json()  # its NOT a dataframe but a dict of lists, so the call only is fine!
     return predictions
 
-predictions = get_predictions(testdata=False)
+predictions = get_predictions(testdata=True)
 
 # put the name and the percentage in a dict
 ranking = {}
@@ -148,6 +151,8 @@ for i,ticker in enumerate(ranking):
     # name
     coin_name = COIN_TRANSLATION_TABLE[ticker]['display']
     cols[0].markdown(f'## {coin_name}')
+    cols[0].image(COIN_TRANSLATION_TABLE[ticker]['link'], caption=None, width=None, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
+    cols[0].markdown(f'### ${ticker}')
     # current price
     current_price = dfs_history[ticker].tail(1)['price'][0]
     #current_price = round(current_price,8)
