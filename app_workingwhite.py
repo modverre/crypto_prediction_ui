@@ -30,11 +30,7 @@ hoursback = 48
 coin_query = ','.join(tickerlist)
 
 url_hist = f'https://cryptov1-x3jub72uhq-ew.a.run.app/get/coin_history?tickerlist={coin_query}&hoursback={hoursback}'
-try:
-    response = requests.get(url_hist).json()
-except:
-    st.write('uh oh, coingecko has seen us -- abort, abort -- lets sneak back in later')
-    assert 1==0
+response = requests.get(url_hist).json()
 
 # get historical prices
 dfs_history = {}
@@ -121,44 +117,31 @@ def generate_price_line_chart(x,y,split_index,coin_name='COINNAME',pred_color='o
 # design starts here
 #
 
-
-
-st.set_page_config(page_title='Cryptologix Group presents: Crypto Shark',
+#Page configuration
+st.set_page_config(page_title="Cryptologix Group presents: Crypto Shark",
                    page_icon="🦈",
                    layout="wide",
-                   initial_sidebar_state="collapsed",
-                   menu_items=None)
+                   )
 
-# remove padding
-padding = 0
-st.markdown(f""" <style>
-    .reportview-container .main .block-container{{
-        margin-top: 0;
-        padding-top: 0;
-        padding-right: 0;
-        padding-left: 0;
-        padding-bottom: 0rem;
-    }} </style> """, unsafe_allow_html=True)
-
-# load magic
-HtmlFile = open("test.html", 'r', encoding='utf-8')
-source_code = HtmlFile.read()
-st.markdown(source_code, unsafe_allow_html= True)
-
+#Header
+col1, col2= st.columns([1,3])
+col1.image("https://xdisplays.net/priv/crypto_shark_white.png", width=200)
+col2.markdown("""
+### Memes Crypto Price Prediction Based on Search and Social Data
+""")
 
 #Ranking
 st.markdown("""---""")
-layout = [1, 3, 3, 3, 6]
-col0, col1, col2, col3, col4 = st.columns(layout)
+layout = [1,1, 1, 2]
+col0, col1, col2, col3 = st.columns(layout)
 
 #Current Price
-col2.subheader("*Current Price*")
+col1.subheader("*Current Price*")
 #Predicted Price & % change
-col3.subheader("*Predicted Price*")
+col2.subheader("*Predicted Price*")
 #Predicted Price for next 24h
-col4.subheader("*Predicted Price next 24h*")
+col3.subheader("*Predicted Price next 24h*")
 st.markdown("""---""")
-
 
 
 #Filling the columns
@@ -167,21 +150,21 @@ for i,ticker in enumerate(ranking):
     cols = st.columns(layout)
     # name
     coin_name = COIN_TRANSLATION_TABLE[ticker]['display']
-    cols[1].markdown(f'## {coin_name}')
-    cols[1].image(COIN_TRANSLATION_TABLE[ticker]['link'], caption=None, width=64, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
-    cols[1].markdown(f'### ${ticker}')
+    cols[0].markdown(f'## {coin_name}')
+    cols[0].image(COIN_TRANSLATION_TABLE[ticker]['link'], caption=None, width=None, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
+    cols[0].markdown(f'### ${ticker}')
     # current price
     current_price = dfs_history[ticker].tail(1)['price'][0]
     #current_price = round(current_price,8)
     current_price_str = '{:.8f}'.format(current_price)
     #current_price_str = str(current_price)
-    cols[2].markdown(f'## €{current_price_str}')
+    cols[1].markdown(f'## €{current_price_str}')
 
     # percentage change
     prediction_price_to_show = predictions[ticker][23]
     percentage_change = ranking[ticker]
     prediction_price_to_show_str = '{:.8f}'.format(prediction_price_to_show)
-    cols[3].metric(" ",f'€{prediction_price_to_show_str}', f'{round(percentage_change,2)}%')
+    cols[2].metric(" ",f'€{prediction_price_to_show_str}', f'{round(percentage_change,2)}%')
     # chart
     # color for the prediction-line
     if prediction_price_to_show >= current_price:
@@ -194,6 +177,6 @@ for i,ticker in enumerate(ranking):
                                     len(dfs_full[ticker])-24,
                                     coin_name=coin_name,
                                     pred_color=pred_color)
-    cols[4].plotly_chart(fig #use_container_width=True
+    cols[3].plotly_chart(fig #use_container_width=True
                          )
     st.markdown("""---""")
