@@ -10,11 +10,14 @@ import plotly.io as pio
 pio.templates.default = "plotly_white"  # change plotly default, white looks better
 
 # Coins list
-tickerlist = [
-    'doge', 'samo', 'cummies', 'dinu', 'doggy', 'elon', 'ftm', 'grlc', 'hoge',
-    'lowb', 'shib', 'shibx', 'smi', 'wow', 'yooshi', 'yummy'
-]
-hoursback = 48
+tickerlist = ["ban", "cummies", "dinu", "doge",
+"doggy", "elon", "erc20", "ftm", "grlc", "hoge",
+"lowb", "mona", "samo", "shib", "shibx", "smi",
+"wow", "yooshi","yummy"]
+
+np.set_printoptions(suppress=True)
+
+hoursback = 24
 
 # reduce the len of the list just for testing
 #tickerlist = ['doge', 'samo']
@@ -32,13 +35,20 @@ for coin in response:
     df = pd.DataFrame.from_dict(response[coin])
     dfs_history[coin] = df
 
-# get predicted prices
-predictions= {}
-for i in tickerlist:
-    preds = []
-    for x in range (24):
-        preds.append(np.random.uniform())
-    predictions[i] = preds
+def get_predictions(testdata=True):
+    if testdata:
+        predictions= {}
+        for i in tickerlist:
+            preds = []
+            for x in range (24):
+                preds.append(np.random.uniform())
+            predictions[i] = preds
+    else:
+        url_predict = 'https://cryptov1-x3jub72uhq-ew.a.run.app/predict'
+        predictions = requests.get(url_predict).json()  # its NOT a dataframe but a dict of lists, so the call only is fine!
+    return predictions
+
+predictions = get_predictions(testdata=False)
 
 # put the name and the percentage in a dict
 ranking = {}
@@ -70,26 +80,31 @@ for ticker in tickerlist:
 def get_line_chart_data(coin_name):
     return pd.DataFrame(predictions[coin_name],columns=['Predicted price'])
 
-def generate_price_line_chart(x,y,split_index,coin_name='COINNAME'):
+
+def generate_price_line_chart(x,y,split_index,coin_name='COINNAME',pred_color='orange'):
     """This function generates a plotly line chart (plotly.go).
     Args:
         x ([list]): [description]
         y ([list]): [description]
         split_index ([type]): where the predicted data starts
         coin_name (str, optional): [description]. Defaults to 'COINNAME'.
-
     Returns:
         figure
     """
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=x[0:split_index+1], y=y[0:split_index+1], name='Historical',
-                            line=dict(color='firebrick', width=2)))
-    fig.add_trace(go.Scatter(x=x[split_index:], y=y[split_index:], name='Predicted',
                             line=dict(color='orange', width=2)))
-
+    fig.add_trace(go.Scatter(x=x[split_index:], y=y[split_index:], name='Predicted',
+                            line=dict(color=pred_color, width=2)))
     fig.update_layout(xaxis_title='Datetime',yaxis_title='Price (vs EUR)',
                       width=500, height=200, margin=dict(l=0, r=0, t=0, b=0),
                       autosize=False)
+    ## addition from garrit
+    min = y.min()
+    max = y.max()
+
+    fig.update_yaxes(range=[min-1*min, max + 0.25 * max])
+
     return fig
 
 
@@ -100,14 +115,14 @@ def generate_price_line_chart(x,y,split_index,coin_name='COINNAME'):
 #
 
 #Page configuration
-st.set_page_config(page_title="Crypto Predicto",
+st.set_page_config(page_title="Cryptologix Group presents: Crypto Shark",
                    page_icon="🦈",
                    layout="wide",
                    )
 
 #Header
 col1, col2= st.columns([1,3])
-col1.image("https://xdisplays.net/priv/crypto_logo.png", width=200)
+col1.image("https://xdisplays.net/priv/crypto_shark_white.png", width=200)
 col2.markdown("""
 ### Memes Crypto Price Prediction Based on Search and Social Data
 """)
@@ -135,19 +150,28 @@ for i,ticker in enumerate(ranking):
     cols[0].markdown(f'## {coin_name}')
     # current price
     current_price = dfs_history[ticker].tail(1)['price'][0]
-    current_marketcap = dfs_history[ticker].tail(1)['market_caps'][0]
-    cols[1].markdown(f'## €{round(current_price,8)}')
-    cols[1].markdown('market cap')
-    cols[1].markdown(f'## €{int(current_marketcap):,}')
-
-
+    #current_price = round(current_price,8)
+    current_price_str = '{:.8f}'.format(current_price)
+    #current_price_str = str(current_price)
+    cols[1].markdown(f'## €{current_price_str}')
 
     # percentage change
+    prediction_price_to_show = predictions[ticker][23]
     percentage_change = ranking[ticker]
-    cols[2].metric(" ",f'€{round(predictions[ticker][23],8)}', f'{round(percentage_change,2)}%')
+    prediction_price_to_show_str = '{:.8f}'.format(prediction_price_to_show)
+    cols[2].metric(" ",f'€{prediction_price_to_show_str}', f'{round(percentage_change,2)}%')
     # chart
-    #cols[3].line_chart(get_line_chart_data(ticker),width=100, height=120)
-    fig = generate_price_line_chart(dfs_full[ticker].index, dfs_full[ticker]['price'], 24, coin_name=coin_name)
+    # color for the prediction-line
+    if prediction_price_to_show >= current_price:
+        pred_color = 'green'
+    else:
+        pred_color = 'firebrick'
+
+    fig = generate_price_line_chart(dfs_full[ticker].index,
+                                    dfs_full[ticker]['price'],
+                                    len(dfs_full[ticker])-24,
+                                    coin_name=coin_name,
+                                    pred_color=pred_color)
     cols[3].plotly_chart(fig #use_container_width=True
                          )
     st.markdown("""---""")
