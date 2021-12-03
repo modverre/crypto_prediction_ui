@@ -34,7 +34,7 @@ try:
     response = requests.get(url_hist).json()
 except:
     st.write('uh oh, coingecko has seen us -- abort, abort -- lets sneak back in later')
-    assert 1==0
+    st.stop()
 
 # get historical prices
 dfs_history = {}
@@ -56,6 +56,17 @@ def get_predictions(testdata=True):
     return predictions
 
 predictions = get_predictions(testdata=False)
+
+# dirty hack ----------
+predictions_adjusted = {}
+for ticker in tickerlist:
+    last_real_price = dfs_history[ticker].tail(1)['price'][0]
+    first_prediction = predictions[ticker][0]
+    gap = first_prediction - last_real_price
+    predictions_adjusted[ticker] = [x - gap for x in predictions[ticker]]
+
+predictions = predictions_adjusted
+# ---------------------
 
 # put the name and the percentage in a dict
 ranking = {}
@@ -110,7 +121,8 @@ def generate_price_line_chart(x,y,split_index,coin_name='COINNAME',pred_color='o
     min = y.min()
     max = y.max()
 
-    fig.update_yaxes(range=[min-1*min, max + 0.25 * max])
+    #fig.update_yaxes(range=[min-1*min, max + 0.25 * max])
+    #fig.update_yaxes(range=[min-1*min, max + 0.25 * max])
 
     return fig
 
